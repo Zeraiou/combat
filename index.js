@@ -12,6 +12,25 @@ const background = new Image()
 
 background.src = "./assets/images/background.png"
 
+const shop = new Sprite({
+	position: {
+		x: 348,
+		y: 124,
+	},
+	color: "red",
+	image: {
+		imageSrc: "./assets/images/shop.png",
+		frameRate: 6,
+		frameBuffer: 8,
+		loop: true,
+		autoplay: true
+	},
+	offset: {
+		x: 0,
+		y: 0,
+	}
+})
+
 const lifeBarWidth = canvas.width - 100
 const lifeBarPlayerWidth = ((canvas.width - 104) / 2)
 const lifeBarWidthMiddlePosition = canvas.width - 104 - ((canvas.width - 104) / 2) + 50 - 1.5
@@ -181,6 +200,13 @@ function animate() {
 	gameInterval = window.requestAnimationFrame(animate)
 
 	c.drawImage(background, 0, 0)
+	
+	c.save()
+	c.scale(1.9, 1.9)
+	shop.draw()
+	c.restore()
+
+	shop.updateFrames()
 	player.update()
 	enemy.update()
 
