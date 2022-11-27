@@ -9,8 +9,6 @@ class Sprite {
 			this.loaded = true
 			this.width = this.image.width / this.frameRate
 			this.height = this.image.height
-
-			console.log(this.width, this.height)
 		}
 		this.image.src = image.imageSrc
 		this.frameRate = image.frameRate

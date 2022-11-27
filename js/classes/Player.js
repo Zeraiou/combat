@@ -1,5 +1,5 @@
 class Player extends Sprite {
-	constructor({ position, color, image, human, hitbox, offset, attackBox, direction, attack1, getHit, animations, name }) {
+	constructor({ position, color, image, human, hitbox, offset, attackBox, direction, attack1, getHit, dead, animations, name }) {
 		super({ position, color, image, offset })
 		this.name = name
 
@@ -23,16 +23,23 @@ class Player extends Sprite {
 		this.attack1Active = false
 		this.attack1Frame = 0
 		this.maxAttack1Frame = attack1 
+		this.damage = 50
 
 		this.getHit = false
 		this.getHitFrame = 0
-		this.getHitMaxFrame = getHit 
+		this.getHitMaxFrame = getHit
+
+		this.dead = false
+		this.deadFrame = 0
+		this.deadMaxFrame = dead 
 
 		this.animations = animations
 		this.currentAnimation = this.animations.Idle
 
 		this.life = 100
 		this.maxLife = 100
+
+		this.amountRoundWin = 0
 		
 		this.updateHitbox()
 		this.updateAttackBox()
@@ -40,7 +47,6 @@ class Player extends Sprite {
 
 	switchSprite(animation) {
 		if (this.currentAnimation !== animation) {
-			console.log(animation)
 			this.currentAnimation = animation
 			this.image.src = animation.imageSrc
 			this.frameRate = animation.frameRate
@@ -91,12 +97,13 @@ class Player extends Sprite {
 	}
 
 	update() {
-		super.updateFrames()
+		if (!this.dead) super.updateFrames()
 		this.updateHitbox()
 		this.updateAttackBox()
 
 		// this.drawHitbox() 
 		this.draw()
+		this.drawRoundWinned()
 
 		this.actionSequence()
 
@@ -126,7 +133,7 @@ class Player extends Sprite {
 						enemy.velocity.y = -16
 						enemy.getHit = true
 						enemy.cannotMove = true
-						enemy.life -= 10
+						enemy.life -= this.damage
 						enemy.switchSprite(enemy.animations.TakeHit)
 					}
 				}
@@ -142,13 +149,14 @@ class Player extends Sprite {
 						player.velocity.y = -16
 						player.getHit = true
 						player.cannotMove = true
-						player.life -= 10
+						player.life -= this.damage
 						player.switchSprite(player.animations.TakeHit)
 					}
 				}
 			}
 		}
-		if (this.getHit) this.updateGetHit()
+		if (this.getHit && !roundOver && !gameOver) this.updateGetHit()
+		if (this.dead) this.updateDead()
 	}
 
 	boundaryCollision() {
@@ -191,6 +199,15 @@ class Player extends Sprite {
 			this.cannotMove = false
 			this.switchSprite(this.animations.Idle)
 		}
+	}
+
+	updateDead() {
+		this.deadFrame++
+
+		if (this.deadFrame >= this.deadMaxFrame - 1) {
+			this.currentFrame = this.frameRate - 1
+		}
+		else super.updateFrames()
 	}
 
 	drawHitbox() {
@@ -242,23 +259,29 @@ class Player extends Sprite {
 	moveHorizontaly() {
 		if (this.human) {
 			if (keys.KeyA.pressed && this.velocity.x >= -this.movementSpeed) {
+				if(!this.attack1Active) this.switchSprite(this.animations.Run)
 				this.velocity.x = -this.movementSpeed
 				this.lastDirection = false
 			}
 			else if (keys.KeyD.pressed && this.velocity.x <= this.movementSpeed) {
+				if(!this.attack1Active) this.switchSprite(this.animations.Run)
 				this.velocity.x = this.movementSpeed
 				this.lastDirection = true
 			}
+			else if (!this.attack1Active) this.switchSprite(this.animations.Idle)
 		}
 		else {
 			if (keys.KeyJ.pressed && this.velocity.x >= -this.movementSpeed) {
+				if(!this.attack1Active) this.switchSprite(this.animations.Run)
 				this.velocity.x = -this.movementSpeed
 				this.lastDirection = false
 			}
 			else if (keys.KeyL.pressed && this.velocity.x >= -this.movementSpeed) {
+				if(!this.attack1Active) this.switchSprite(this.animations.Run)
 				this.velocity.x = this.movementSpeed
 				this.lastDirection = true
 			}
+			else if(!this.attack1Active) this.switchSprite(this.animations.Idle)
 		}
 	}
 
@@ -308,5 +331,63 @@ class Player extends Sprite {
 			box.y <= enemy.y + enemy.height &&
 			box.y + box.height >= enemy.y
 		)
+	}
+
+	drawRoundWinned() {
+		if (this.human) {
+			c.beginPath()
+			c.fillStyle = "black"
+			c.arc(70, 65, 10, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+
+			c.beginPath()
+			if (player.amountRoundWin > 0) c.fillStyle = "green"
+			else c.fillStyle = "white"
+			c.arc(70, 65, 8, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+
+			c.beginPath()
+			c.fillStyle = "black"
+			c.arc(93, 65, 10, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+
+			c.beginPath()
+			if (player.amountRoundWin > 1) c.fillStyle = "green"
+			else c.fillStyle = "white"
+			c.arc(93, 65, 8, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+		}
+
+		if (!this.human) {
+			c.beginPath()
+			c.fillStyle = "black"
+			c.arc(930, 65, 10, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+
+			c.beginPath()
+			if (enemy.amountRoundWin > 0) c.fillStyle = "green"
+			else c.fillStyle = "white"
+			c.arc(930, 65, 8, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+
+			c.beginPath()
+			c.fillStyle = "black"
+			c.arc(953, 65, 10, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+
+			c.beginPath()
+			if (enemy.amountRoundWin > 1) c.fillStyle = "green"
+			else c.fillStyle = "white"
+			c.arc(953, 65, 8, 0, fullRadiant)
+			c.fill()
+			c.closePath()
+		}
 	}
 }
