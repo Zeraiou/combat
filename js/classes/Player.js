@@ -23,7 +23,7 @@ class Player extends Sprite {
 		this.attack1Active = false
 		this.attack1Frame = 0
 		this.maxAttack1Frame = attack1 
-		this.damage = 50
+		this.damage = 10
 
 		this.getHit = false
 		this.getHitFrame = 0
