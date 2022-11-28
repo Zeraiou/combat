@@ -10,6 +10,7 @@ class Player extends Sprite {
 
 		this.hitbox = hitbox
 		this.attackBox = attackBox
+		this.lastHitbox = hitbox
 
 		this.gravity = 0.5
 		this.stopMotion = 0.5
@@ -60,6 +61,7 @@ class Player extends Sprite {
 	} 
 
 	updateHitbox() {
+		this.lastHitbox = this.hitbox
 		this.hitbox = {
 			x: this.position.x + this.offset.x,
 			y: this.position.y + this.offset.y,
@@ -112,7 +114,7 @@ class Player extends Sprite {
 
 	actionSequence() {
 		this.applyGravity()
-		if (!this.cannotMove) this.jump()
+		if (!this.cannotMove && this.onGround && !(this.velocity.y > 1)) this.jump()
 		
 		this.applyStopMotion()
 		if (!this.cannotMove) this.moveHorizontaly()
@@ -160,6 +162,7 @@ class Player extends Sprite {
 	}
 
 	boundaryCollision() {
+		this.checkPlatformsCollision()
 		this.checkGroundCollision()
 		this.checkLeftWallCollision()
 		this.checkRightWallCollision()
@@ -227,19 +230,15 @@ class Player extends Sprite {
 
 	jump() {
 		if (keys.KeyW.pressed && this.human) {
-			if (this.onGround) {
-				this.velocity.y = this.jumpHeight
-				this.position.y += this.velocity.y
-				this.onGround = false
-			}
+			this.velocity.y = this.jumpHeight
+			this.position.y += this.velocity.y
+			this.onGround = false
 		}
 
 		if (keys.KeyI.pressed && !this.human) {
-			if (this.onGround) {
-				this.velocity.y = this.jumpHeight
-				this.position.y += this.velocity.y
-				this.onGround = false
-			}
+			this.velocity.y = this.jumpHeight
+			this.position.y += this.velocity.y
+			this.onGround = false
 		}
 	}
 
@@ -283,6 +282,21 @@ class Player extends Sprite {
 			}
 			else if(!this.attack1Active) this.switchSprite(this.animations.Idle)
 		}
+	}
+
+	checkPlatformsCollision() {
+		platforms.forEach(platform => {
+			if (this.lastHitbox.y + this.lastHitbox.height < platform.position.y  ) {
+				if (this.hitbox.y + this.hitbox.height >= platform.position.y &&
+						this.hitbox.x >= platform.position.x &&
+						this.hitbox.x + this.hitbox.width <= platform.position.x + platform.width) {
+					this.velocity.y = 0
+					this.position.y = platform.position.y - this.hitbox.height - this.offset.y - 0.01
+					this.onGround = true
+					this.updateHitbox()
+				}
+			}
+		})
 	}
 
 	checkGroundCollision() {

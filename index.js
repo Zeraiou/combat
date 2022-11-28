@@ -21,6 +21,18 @@ let inBetweenRoundFrame = 0
 
 const background = new Image()
 
+const shopRoof = {
+	position: {
+		x: 673,
+		y: 321,
+	},
+	width: 195,
+	height: 1,
+}
+
+const platforms = []
+platforms.push(shopRoof)
+
 background.src = "./assets/images/background.png"
 
 const shop = new Sprite({
@@ -238,12 +250,21 @@ function animate() {
 	player.update()
 	enemy.update()
 
+	// drawPlatorms()
+
 	drawLifeBar()
 
 	if (!roundOver) detectRoundOver()
 
 	if (roundOver) drawRoundOver()
 	if (gameOver) drawGameOver()
+}
+
+function drawPlatorms() {
+	platforms.forEach(platform => {
+		c.fillStyle = "red"
+		c.fillRect(platform.position.x, platform.position.y, platform.width, platform.height)
+	})
 }
 
 function manageTime() {

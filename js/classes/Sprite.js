@@ -23,8 +23,8 @@ class Sprite {
 	}
 
 	draw() {
-		c.fillStyle = "rgba(30, 09, 200, 0.4"
-		//c.fillRect(this.position.x, this.position.y, this.width, this.height)
+		// c.fillStyle = "rgba(30, 09, 200, 0.4"
+		// c.fillRect(this.position.x, this.position.y, this.width, this.height)
 
 		const crop = {
 			x: this.currentFrame * this.width,
