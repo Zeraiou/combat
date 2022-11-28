@@ -19,26 +19,46 @@ let timer = 60
 let gameFrame = 0
 let inBetweenRoundFrame = 0
 
-const background = new Image()
-
-const shopRoof = {
+const background = new Sprite({
 	position: {
-		x: 673,
-		y: 321,
+		x: 0,
+		y: 0,
 	},
-	width: 195,
+	image: {
+		imageSrc: "./assets/images/background.png",
+		frameRate: 1,
+		frameBuffer: 1,
+		loop: false,
+		autoplay: false
+	},
+})
+
+const shopTopRoof = {
+	position: {
+		x: 645,
+		y: 247,
+	},
+	width: 260,
+	height: 1,
+}
+
+const shopBottomRoof = {
+	position: {
+		x: 628,
+		y: 325,
+	},
+	width: 293,
 	height: 1,
 }
 
 const platforms = []
-platforms.push(shopRoof)
-
-background.src = "./assets/images/background.png"
+platforms.push(shopTopRoof)
+platforms.push(shopBottomRoof)
 
 const shop = new Sprite({
 	position: {
-		x: 348,
-		y: 124,
+		x: 610,
+		y: 122,
 	},
 	color: "red",
 	image: {
@@ -51,7 +71,8 @@ const shop = new Sprite({
 	offset: {
 		x: 0,
 		y: 0,
-	}
+	}, 
+	scale: 2.8
 })
 
 const lifeBarWidth = canvas.width - 100
@@ -88,8 +109,8 @@ const keys = {
 
 const player = new Player({ 
 	position: {
-		x: 30,
-		y: 375
+		x: -76,
+		y: 250,
 	},
 	color: "red",
 	image: {
@@ -103,18 +124,22 @@ const player = new Player({
 	hitbox: {
 		x: 0,
 		y: 0,
-		width: 30,
-		height: 47,
+		width: 60,
+		height: 94,
+		center: {
+			x: 0 + 85 + (60 / 2),
+			y: 0 + 75 + (94 / 2),
+		}
 	},
 	offset: {
-		x: 85,
-		y: 75,
+		x: 170,
+		y: 150,
 	}, 
 	attackBox: {
 		x: 0,
 		y: 0,
-		width: 30,
-		height: 15,
+		width: 60,
+		height: 30,
 	}, 
 	direction : true,
 	attack1: 6 * 5,
@@ -156,14 +181,29 @@ const player = new Player({
 			loop: true,
 			autoplay: true
 		},
+		"Jump": {
+			imageSrc: "./assets/images/samuraiMack/Jump.png",
+			frameRate: 2,
+			frameBuffer: 6,
+			loop: true,
+			autoplay: true
+		},
+		"Fall": {
+			imageSrc: "./assets/images/samuraiMack/Fall.png",
+			frameRate: 2,
+			frameBuffer: 6,
+			loop: true,
+			autoplay: true
+		},
 	},
-	name: "Samouraï Max"
+	name: "Samouraï Max",
+	scale: 2
 })
 
 const enemy = new Player({ 
 	position: {
-		x: 830,
-		y: 375
+		x: 725,
+		y: 250
 	},
 	color: "blue",
 	image: {
@@ -177,18 +217,22 @@ const enemy = new Player({
 	hitbox: {
 		x: 0,
 		y: 0,
-		width: 20,
-		height: 53,
+		width: 40,
+		height: 106,
+		center: {
+			x: 0 + 174 + (40 / 2),
+			y: 0 + 150 + (106 / 2),
+		}
 	},
 	offset: {
-		x: 87,
-		y: 75,
+		x: 174,
+		y: 150,
 	}, 
 	attackBox: {
 		x: 0,
 		y: 0,
-		width: 30,
-		height: 15,
+		width: 60,
+		height: 30,
 	},
 	direction : false,
 	attack1: 4 * 5,
@@ -230,8 +274,23 @@ const enemy = new Player({
 			loop: true,
 			autoplay: true
 		},
+		"Jump": {
+			imageSrc: "./assets/images/kenji/Jump.png",
+			frameRate: 2,
+			frameBuffer: 6,
+			loop: true,
+			autoplay: true
+		},
+		"Fall": {
+			imageSrc: "./assets/images/kenji/Fall.png",
+			frameRate: 2,
+			frameBuffer: 6,
+			loop: true,
+			autoplay: true
+		},
 	},
-	name: "Kenji"
+	name: "Super Ninja Raquel",
+	scale: 2
 })
 
 function animate() {
@@ -239,25 +298,23 @@ function animate() {
 	if (!roundOver && !gameOver) manageTime()
 	if (roundOver && !gameOver) newRound()
 	
-	c.drawImage(background, 0, 0)
+	background.draw()
 	
-	c.save()
-	c.scale(1.9, 1.9)
 	shop.draw()
-	c.restore()
 
 	shop.updateFrames()
 	player.update()
 	enemy.update()
 
 	// drawPlatorms()
-
+	
 	drawLifeBar()
 
 	if (!roundOver) detectRoundOver()
 
 	if (roundOver) drawRoundOver()
 	if (gameOver) drawGameOver()
+
 }
 
 function drawPlatorms() {
@@ -270,7 +327,7 @@ function drawPlatorms() {
 function manageTime() {
 	gameFrame++
 
-	if (gameFrame % 60 === 0 && !roundOver) {
+	if (gameFrame % 60 === 0 && timer > 0) {
 		timer--
 	}
 
@@ -278,8 +335,7 @@ function manageTime() {
 		timerCard.style.color = "red"
 	}
 
-	if (timer <= 0 && !roundOver) {
-		timer = 0
+	if (timer === 0) {
 		player.cannotMove = true
 		enemy.cannotMove = true
 		player.switchSprite(player.animations.Idle)
@@ -315,6 +371,8 @@ function detectGameOver() {
 			enemy.amountRoundWin === 2) {
 		roundOver = false
 		gameOver = true
+		player.cannotMove = true
+		enemy.cannotMove = true
 	}
 }
 
@@ -323,10 +381,10 @@ function newRound() {
 
 	if (inBetweenRoundFrame === 300) {
 		console.log('newRound')
-		player.position.x = 30
-		player.position.y = 375
-		enemy.position.x = 830
-		enemy.position.y = 375
+		player.position.x = -76
+		player.position.y = 250
+		enemy.position.x = 725
+		enemy.position.y = 250
 
 		player.velocity.x = 0
 		player.velocity.y = 0
@@ -382,7 +440,7 @@ function drawLifeBar() {
 	c.fillRect(lifeBarEnemyPosition, 27, ((enemy.life / enemy.maxLife) * (lifeBarPlayerWidth + 0.5)), 21)
 
 	c.fillStyle = "black"
-	c.fillText(enemy.name, canvas.width - 108, 23)
+	c.fillText(enemy.name, canvas.width - 236, 23)
 
 	c.fillStyle = "black"
 	c.fillRect(lifeBarWidthMiddlePosition, 25, 3, 25)
@@ -396,7 +454,7 @@ function detectRoundOver() {
 
 		if (player.life <= 0) {
 			winner = enemy.name
-			resultCard.style.fontSize = "100px"
+			resultCard.style.fontSize = "64px"
 			player.switchSprite(player.animations.Dead)
 			player.dead = true
 			enemy.amountRoundWin++
@@ -426,12 +484,12 @@ function drawRoundOver() {
 function drawGameOver() {
 	let gameResult = ""
 	if (player.amountRoundWin > enemy.amountRoundWin) {
-		resultCard.style.fontSize = "70px"
+		resultCard.style.fontSize = "64x"
 		gameResult = player.name + " WIN!!!"
 	}
 	else if (enemy.amountRoundWin > player.amountRoundWin) {
 		gameResult = enemy.name + " WIN!!!"
-		resultCard.style.fontSize = "100px"
+		resultCard.style.fontSize = "70px"
 	}
 	else {
 		resultCard.style.fontSize = "60px"

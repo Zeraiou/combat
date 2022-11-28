@@ -1,5 +1,5 @@
 class Sprite {
-	constructor({ position, color, image, offset }) {
+	constructor({ position, color = "red", image, offset = { x: 0, y: 0 }, scale = 1 }) {
 		this.position = position
 		this.offset = offset
 		this.color = color
@@ -7,8 +7,8 @@ class Sprite {
 		this.image = new Image()
 		this.image.onload = () => {
 			this.loaded = true
-			this.width = this.image.width / this.frameRate
-			this.height = this.image.height
+			this.width = (this.image.width / this.frameRate) * this.scale
+			this.height = this.image.height * this.scale
 		}
 		this.image.src = image.imageSrc
 		this.frameRate = image.frameRate
@@ -18,6 +18,7 @@ class Sprite {
 
 		this.currentFrame = 0
 		this.frameElapsed = 0
+		this.scale = scale
 
 		this.loaded = false
 	}
@@ -27,10 +28,10 @@ class Sprite {
 		// c.fillRect(this.position.x, this.position.y, this.width, this.height)
 
 		const crop = {
-			x: this.currentFrame * this.width,
+			x: this.currentFrame * (this.width / this.scale),
 			y: 0,
-			width: this.width,
-			height: this.height
+			width: this.width / this.scale,
+			height: this.height / this.scale
 		}
 
 		if (this.loaded) c.drawImage(

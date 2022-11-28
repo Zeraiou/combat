@@ -1,6 +1,6 @@
 class Player extends Sprite {
-	constructor({ position, color, image, human, hitbox, offset, attackBox, direction, attack1, getHit, dead, animations, name }) {
-		super({ position, color, image, offset })
+	constructor({ position, color, image, human, hitbox, offset, attackBox, direction, attack1, getHit, dead, animations, name, scale = 1 }) {
+		super({ position, color, image, offset, scale })
 		this.name = name
 
 		this.velocity = {
@@ -14,8 +14,8 @@ class Player extends Sprite {
 
 		this.gravity = 0.5
 		this.stopMotion = 0.5
-		this.jumpHeight = -13
-		this.movementSpeed = 5
+		this.jumpHeight = -15
+		this.movementSpeed = 8
 		this.onGround = false
 		this.human = human
 		this.direction = direction
@@ -67,6 +67,10 @@ class Player extends Sprite {
 			y: this.position.y + this.offset.y,
 			width: this.hitbox.width,
 			height: this.hitbox.height,
+			center: {
+				x: this.position.x + this.offset.x + (this.hitbox.width / 2),
+				y: this.position.y + this.offset.y + (this.hitbox.height / 2),
+			}
 		}
 	}
 
@@ -78,16 +82,16 @@ class Player extends Sprite {
 
 		if (this.human) {
 			positionX = this.hitbox.x
-			positionY = this.hitbox.y - 22
-			width = this.hitbox.width + 75
-			height = this.hitbox.height + 22
+			positionY = this.hitbox.y - 44
+			width = this.hitbox.width + 150
+			height = this.hitbox.height + 44
 		}
 
 		else {
-			positionX = this.hitbox.x - 70
-			positionY = this.hitbox.y - 8
-			width = this.hitbox.width + 70
-			height = this.hitbox.height + 8
+			positionX = this.hitbox.x - 140
+			positionY = this.hitbox.y - 16
+			width = this.hitbox.width + 140
+			height = this.hitbox.height + 16
 		}
 
 		this.attackBox = {
@@ -127,12 +131,12 @@ class Player extends Sprite {
 		if (this.attack1Active) {
 			if (this.human) {
 				if (this.attack1Frame >= 20) {
-					//this.drawAttackBox()
+					// this.drawAttackBox()
 					if (this.detectCollisionAttack1(player.attackBox, enemy.hitbox) &&
 							!enemy.getHit) {
 						enemy.velocity.x = 15
 						enemy.lastDirection = true
-						enemy.velocity.y = -16
+						enemy.velocity.y = -10
 						enemy.getHit = true
 						enemy.cannotMove = true
 						enemy.life -= this.damage
@@ -143,12 +147,12 @@ class Player extends Sprite {
 			else {
 				if (this.attack1Frame >= 10 &&
 						this.attack1Frame <= 25) {
-					//this.drawAttackBox()
+					// this.drawAttackBox()
 					if (this.detectCollisionAttack1(enemy.attackBox, player.hitbox) &&
 							!player.getHit) {
 						player.velocity.x = -15
 						player.lastDirection = false
-						player.velocity.y = -16
+						player.velocity.y = -10
 						player.getHit = true
 						player.cannotMove = true
 						player.life -= this.damage
@@ -189,7 +193,9 @@ class Player extends Sprite {
 		if (this.attack1Frame === this.maxAttack1Frame - 1) {
 			this.attack1Frame = 0
 			this.attack1Active = false
-			this.switchSprite(this.animations.Idle)
+			if (this.velocity.y < 0) this.switchSprite(this.animations.Jump)
+			else if (this.velocity.y > 0) this.switchSprite(this.animations.Fall)
+			else this.switchSprite(this.animations.Idle)
 		}
 	}
 
@@ -224,21 +230,28 @@ class Player extends Sprite {
 	}
 
 	applyGravity() {
+		if (this.velocity.y < 0 && 
+				this.velocity.y + this.gravity >= 0 &&
+				!this.attack1Active &&
+				!this.dead) this.switchSprite(this.animations.Fall)
 		this.velocity.y += this.gravity
 		this.position.y += this.velocity.y
 	}
 
 	jump() {
 		if (keys.KeyW.pressed && this.human) {
+			this.onGround = false
 			this.velocity.y = this.jumpHeight
 			this.position.y += this.velocity.y
-			this.onGround = false
+			
+			if (!this.attack1Active) this.switchSprite(this.animations.Jump)
 		}
 
 		if (keys.KeyI.pressed && !this.human) {
 			this.velocity.y = this.jumpHeight
 			this.position.y += this.velocity.y
 			this.onGround = false
+			if (!this.attack1Active) this.switchSprite(this.animations.Jump)
 		}
 	}
 
@@ -258,16 +271,22 @@ class Player extends Sprite {
 	moveHorizontaly() {
 		if (this.human) {
 			if (keys.KeyA.pressed && this.velocity.x >= -this.movementSpeed) {
-				if(!this.attack1Active) this.switchSprite(this.animations.Run)
+				if(!this.attack1Active && this.onGround) {
+					this.switchSprite(this.animations.Run)
+				}
 				this.velocity.x = -this.movementSpeed
 				this.lastDirection = false
 			}
 			else if (keys.KeyD.pressed && this.velocity.x <= this.movementSpeed) {
-				if(!this.attack1Active) this.switchSprite(this.animations.Run)
+				if(!this.attack1Active && this.onGround) {
+					this.switchSprite(this.animations.Run)
+				}
 				this.velocity.x = this.movementSpeed
 				this.lastDirection = true
 			}
-			else if (!this.attack1Active) this.switchSprite(this.animations.Idle)
+			else if (!this.attack1Active && this.onGround) {
+				this.switchSprite(this.animations.Idle)		
+			}
 		}
 		else {
 			if (keys.KeyJ.pressed && this.velocity.x >= -this.movementSpeed) {
@@ -288,8 +307,8 @@ class Player extends Sprite {
 		platforms.forEach(platform => {
 			if (this.lastHitbox.y + this.lastHitbox.height < platform.position.y  ) {
 				if (this.hitbox.y + this.hitbox.height >= platform.position.y &&
-						this.hitbox.x >= platform.position.x &&
-						this.hitbox.x + this.hitbox.width <= platform.position.x + platform.width) {
+						this.hitbox.center.x >= platform.position.x &&
+						this.hitbox.center.x <= platform.position.x + platform.width) {
 					this.velocity.y = 0
 					this.position.y = platform.position.y - this.hitbox.height - this.offset.y - 0.01
 					this.onGround = true
@@ -300,12 +319,13 @@ class Player extends Sprite {
 	}
 
 	checkGroundCollision() {
-		if (this.hitbox.y + this.hitbox.height > 479 ) {
+		if (this.hitbox.y + this.hitbox.height + this.velocity.y > 479 ) {
 			const y = this.hitbox.y - this.position.y
 			this.position.y = 479 - y - this.hitbox.height
 			this.velocity.y = 0
 			this.onGround = true
 			this.updateHitbox()
+			this.updateAttackBox()
 		}
 	}
 
